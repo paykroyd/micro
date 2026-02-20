@@ -226,6 +226,27 @@ modSearch:
 	return KeyEvent{}, false
 }
 
+func correctModifierCase(k string) (string, bool) {
+	// Check for common case mistakes in modifier prefixes
+	lower := strings.ToLower(k)
+	corrected := k
+	changed := false
+
+	for _, mod := range []struct{ wrong, right string }{
+		{"ctrl", "Ctrl"},
+		{"alt", "Alt"},
+		{"shift", "Shift"},
+	} {
+		if strings.HasPrefix(lower, mod.wrong) && !strings.HasPrefix(corrected, mod.right) {
+			corrected = mod.right + corrected[len(mod.wrong):]
+			changed = true
+			lower = strings.ToLower(corrected)
+		}
+	}
+
+	return corrected, changed
+}
+
 func findEvent(k string) (Event, error) {
 	var event Event
 	event, ok, err := findEvents(k)
@@ -236,6 +257,12 @@ func findEvent(k string) (Event, error) {
 	if !ok {
 		event, ok = findSingleEvent(k)
 		if !ok {
+			// Check if fixing modifier case would make it valid
+			if corrected, changed := correctModifierCase(k); changed {
+				if _, ok2 := findSingleEvent(corrected); ok2 {
+					return nil, fmt.Errorf("%s is not a bindable event (did you mean %q?)", k, corrected)
+				}
+			}
 			return nil, errors.New(k + " is not a bindable event")
 		}
 	}
