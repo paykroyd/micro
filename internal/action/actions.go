@@ -913,6 +913,9 @@ func (h *BufPane) Autocomplete() bool {
 
 	if b.HasSuggestions {
 		b.CycleAutocomplete(true)
+		if ActivePopup != nil {
+			ActivePopup.SetSelected(b.CurSuggestion)
+		}
 		return true
 	}
 
@@ -926,7 +929,11 @@ func (h *BufPane) Autocomplete() bool {
 		return false
 	}
 
-	return b.Autocomplete(buffer.BufferComplete)
+	if b.Autocomplete(buffer.BufferComplete) {
+		ShowCompletionPopup(h)
+		return true
+	}
+	return false
 }
 
 // CycleAutocompleteBack cycles back in the autocomplete suggestion list
@@ -937,6 +944,9 @@ func (h *BufPane) CycleAutocompleteBack() bool {
 
 	if h.Buf.HasSuggestions {
 		h.Buf.CycleAutocomplete(false)
+		if ActivePopup != nil {
+			ActivePopup.SetSelected(h.Buf.CurSuggestion)
+		}
 		return true
 	}
 	return false

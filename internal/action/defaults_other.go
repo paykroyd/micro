@@ -74,7 +74,7 @@ var bufdefaults = map[string]string{
 	"Delete":         "Delete",
 	"Ctrl-b":         "ShellMode",
 	"Ctrl-q":         "Quit",
-	"Ctrl-e":         "CommandMode",
+	"Ctrl-e":         "CommandPalette",
 	"Ctrl-w":         "NextSplit|FirstSplit",
 	"Ctrl-u":         "ToggleMacro",
 	"Ctrl-j":         "PlayMacro",

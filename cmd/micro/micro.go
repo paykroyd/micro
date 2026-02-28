@@ -495,6 +495,10 @@ func DoEvent() {
 	}
 	action.MainTab().Display()
 	action.InfoBar.Display()
+	// Draw popup last so it overlays everything
+	if action.ActivePopup != nil && action.ActivePopup.Visible {
+		action.ActivePopup.Display()
+	}
 	screen.Screen.Show()
 
 	// Check for new events
@@ -532,6 +536,16 @@ func DoEvent() {
 	}
 
 	if event != nil {
+		// Intercept events for popup before other handlers
+		if action.ActivePopup != nil && action.ActivePopup.Visible {
+			if action.ActivePopup.HandleEvent(event) {
+				err := config.RunPluginFn("onAnyEvent")
+				if err != nil {
+					screen.TermMessage(err)
+				}
+				return
+			}
+		}
 		_, resize := event.(*tcell.EventResize)
 		if resize {
 			action.InfoBar.HandleEvent(event)
@@ -542,6 +556,9 @@ func DoEvent() {
 			action.Tabs.HandleEvent(event)
 		}
 	}
+
+	// Sync completion popup with buffer state
+	action.SyncPopupWithBuffer()
 
 	err := config.RunPluginFn("onAnyEvent")
 	if err != nil {

@@ -65,6 +65,12 @@ func (i *InfoWindow) SetView(v *View)  {}
 func (i *InfoWindow) SetActive(b bool) {}
 func (i *InfoWindow) IsActive() bool   { return true }
 
+func (i *InfoWindow) CursorScreenPos() (int, int) {
+	c := i.Buffer.GetActiveCursor()
+	x := util.CharacterCountInString(i.Msg) + c.X
+	return x, i.Y
+}
+
 func (i *InfoWindow) LocFromVisual(vloc buffer.Loc) buffer.Loc {
 	c := i.Buffer.GetActiveCursor()
 	l := i.Buffer.LineBytes(0)
@@ -238,7 +244,7 @@ func (i *InfoWindow) Display() {
 		}
 	}
 
-	if i.HasSuggestions && len(i.Suggestions) > 1 {
+	if i.HasSuggestions && len(i.Suggestions) > 1 && !CompletionPopupVisible {
 		i.scrollToSuggestion()
 
 		x := -i.hscroll

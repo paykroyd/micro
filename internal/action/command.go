@@ -64,9 +64,10 @@ func InitCommands() {
 		"tabswitch":   {(*BufPane).TabSwitchCmd, nil},
 		"term":        {(*BufPane).TermCmd, nil},
 		"memusage":    {(*BufPane).MemUsageCmd, nil},
-		"retab":       {(*BufPane).RetabCmd, nil},
-		"raw":         {(*BufPane).RawCmd, nil},
-		"textfilter":  {(*BufPane).TextFilterCmd, nil},
+		"retab":          {(*BufPane).RetabCmd, nil},
+		"raw":            {(*BufPane).RawCmd, nil},
+		"textfilter":     {(*BufPane).TextFilterCmd, nil},
+		"commandpalette": {func(h *BufPane, args []string) { h.CommandPalette() }, nil},
 	}
 }
 

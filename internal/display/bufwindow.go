@@ -102,6 +102,15 @@ func (w *BufWindow) IsActive() bool {
 	return w.active
 }
 
+// CursorScreenPos returns the screen coordinates of the active cursor.
+func (w *BufWindow) CursorScreenPos() (int, int) {
+	c := w.Buf.GetActiveCursor()
+	vloc := w.VLocFromLoc(c.Loc)
+	x := w.X + w.gutterOffset + vloc.VisualX - w.StartCol
+	y := w.Y + w.Diff(w.StartLine, vloc.SLoc)
+	return x, y
+}
+
 // BufView returns the width, height and x,y location of the actual buffer.
 // It is not exactly the same as the whole window which also contains gutter,
 // ruler, scrollbar and statusline.
