@@ -89,6 +89,8 @@ func SyncPopupWithBuffer() {
 }
 
 // CommandPalette opens a centered popup listing all available commands.
+// Selecting a command that requires arguments opens an InfoBar prompt
+// pre-seeded with the command name so the user can type the arguments.
 func (h *BufPane) CommandPalette() bool {
 	var items []string
 	for name := range commands {
@@ -96,7 +98,15 @@ func (h *BufPane) CommandPalette() bool {
 	}
 	sort.Strings(items)
 	ShowPickerPopup("Command Palette", items, func(_ int, cmd string) {
-		h.HandleCommand(cmd)
+		if c, ok := commands[cmd]; ok && c.requiresArgs {
+			InfoBar.Prompt("> ", cmd+" ", "Command", nil, func(resp string, canceled bool) {
+				if !canceled {
+					h.HandleCommand(resp)
+				}
+			})
+		} else {
+			h.HandleCommand(cmd)
+		}
 	})
 	return true
 }

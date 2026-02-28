@@ -22,52 +22,56 @@ import (
 )
 
 // A Command contains information about how to execute a command
-// It has the action for that command as well as a completer function
+// It has the action for that command as well as a completer function.
+// requiresArgs indicates that the command needs at least one argument to do
+// anything useful; the command palette uses this to prompt for args instead
+// of executing the command directly.
 type Command struct {
-	action    func(*BufPane, []string)
-	completer buffer.Completer
+	action       func(*BufPane, []string)
+	completer    buffer.Completer
+	requiresArgs bool
 }
 
 var commands map[string]Command
 
 func InitCommands() {
 	commands = map[string]Command{
-		"set":         {(*BufPane).SetCmd, OptionValueComplete},
-		"setlocal":    {(*BufPane).SetLocalCmd, OptionValueComplete},
-		"toggle":      {(*BufPane).ToggleCmd, OptionValueComplete},
-		"togglelocal": {(*BufPane).ToggleLocalCmd, OptionValueComplete},
-		"reset":       {(*BufPane).ResetCmd, OptionValueComplete},
-		"show":        {(*BufPane).ShowCmd, OptionComplete},
-		"showkey":     {(*BufPane).ShowKeyCmd, nil},
-		"run":         {(*BufPane).RunCmd, nil},
-		"bind":        {(*BufPane).BindCmd, nil},
-		"unbind":      {(*BufPane).UnbindCmd, nil},
-		"quit":        {(*BufPane).QuitCmd, nil},
-		"goto":        {(*BufPane).GotoCmd, nil},
-		"jump":        {(*BufPane).JumpCmd, nil},
-		"save":        {(*BufPane).SaveCmd, nil},
-		"replace":     {(*BufPane).ReplaceCmd, nil},
-		"replaceall":  {(*BufPane).ReplaceAllCmd, nil},
-		"vsplit":      {(*BufPane).VSplitCmd, buffer.FileComplete},
-		"hsplit":      {(*BufPane).HSplitCmd, buffer.FileComplete},
-		"tab":         {(*BufPane).NewTabCmd, buffer.FileComplete},
-		"help":        {(*BufPane).HelpCmd, HelpComplete},
-		"eval":        {(*BufPane).EvalCmd, nil},
-		"log":         {(*BufPane).ToggleLogCmd, nil},
-		"plugin":      {(*BufPane).PluginCmd, PluginComplete},
-		"reload":      {(*BufPane).ReloadCmd, nil},
-		"reopen":      {(*BufPane).ReopenCmd, nil},
-		"cd":          {(*BufPane).CdCmd, buffer.FileComplete},
-		"pwd":         {(*BufPane).PwdCmd, nil},
-		"open":        {(*BufPane).OpenCmd, buffer.FileComplete},
-		"tabmove":     {(*BufPane).TabMoveCmd, nil},
-		"tabswitch":   {(*BufPane).TabSwitchCmd, nil},
-		"term":        {(*BufPane).TermCmd, nil},
-		"memusage":    {(*BufPane).MemUsageCmd, nil},
-		"retab":          {(*BufPane).RetabCmd, nil},
-		"raw":            {(*BufPane).RawCmd, nil},
-		"textfilter":     {(*BufPane).TextFilterCmd, nil},
-		"commandpalette": {func(h *BufPane, args []string) { h.CommandPalette() }, nil},
+		"set":            {(*BufPane).SetCmd, OptionValueComplete, true},
+		"setlocal":       {(*BufPane).SetLocalCmd, OptionValueComplete, true},
+		"toggle":         {(*BufPane).ToggleCmd, OptionValueComplete, true},
+		"togglelocal":    {(*BufPane).ToggleLocalCmd, OptionValueComplete, true},
+		"reset":          {(*BufPane).ResetCmd, OptionValueComplete, true},
+		"show":           {(*BufPane).ShowCmd, OptionComplete, true},
+		"showkey":        {(*BufPane).ShowKeyCmd, nil, true},
+		"run":            {(*BufPane).RunCmd, nil, true},
+		"bind":           {(*BufPane).BindCmd, nil, true},
+		"unbind":         {(*BufPane).UnbindCmd, nil, true},
+		"quit":           {(*BufPane).QuitCmd, nil, false},
+		"goto":           {(*BufPane).GotoCmd, nil, true},
+		"jump":           {(*BufPane).JumpCmd, nil, true},
+		"save":           {(*BufPane).SaveCmd, nil, false},
+		"replace":        {(*BufPane).ReplaceCmd, nil, true},
+		"replaceall":     {(*BufPane).ReplaceAllCmd, nil, true},
+		"vsplit":         {(*BufPane).VSplitCmd, buffer.FileComplete, true},
+		"hsplit":         {(*BufPane).HSplitCmd, buffer.FileComplete, true},
+		"tab":            {(*BufPane).NewTabCmd, buffer.FileComplete, false},
+		"help":           {(*BufPane).HelpCmd, HelpComplete, false},
+		"eval":           {(*BufPane).EvalCmd, nil, true},
+		"log":            {(*BufPane).ToggleLogCmd, nil, false},
+		"plugin":         {(*BufPane).PluginCmd, PluginComplete, true},
+		"reload":         {(*BufPane).ReloadCmd, nil, false},
+		"reopen":         {(*BufPane).ReopenCmd, nil, false},
+		"cd":             {(*BufPane).CdCmd, buffer.FileComplete, true},
+		"pwd":            {(*BufPane).PwdCmd, nil, false},
+		"open":           {(*BufPane).OpenCmd, buffer.FileComplete, true},
+		"tabmove":        {(*BufPane).TabMoveCmd, nil, true},
+		"tabswitch":      {(*BufPane).TabSwitchCmd, nil, true},
+		"term":           {(*BufPane).TermCmd, nil, false},
+		"memusage":       {(*BufPane).MemUsageCmd, nil, false},
+		"retab":          {(*BufPane).RetabCmd, nil, false},
+		"raw":            {(*BufPane).RawCmd, nil, false},
+		"textfilter":     {(*BufPane).TextFilterCmd, nil, true},
+		"commandpalette": {func(h *BufPane, args []string) { h.CommandPalette() }, nil, false},
 	}
 }
 
@@ -75,7 +79,7 @@ func InitCommands() {
 // This can be called by plugins in Lua so that plugins can define their own commands
 func MakeCommand(name string, action func(bp *BufPane, args []string), completer buffer.Completer) {
 	if action != nil {
-		commands[name] = Command{action, completer}
+		commands[name] = Command{action, completer, false}
 	}
 }
 
