@@ -89,10 +89,10 @@ func (p *PopupMenu) layout() (x, y, w, h int) {
 		visible = 1
 	}
 
-	// h = top border + [filter row] + item rows + bottom border
+	// h = top border + [filter row + separator] + item rows + bottom border
 	h = visible + 2
 	if p.Filterable {
-		h++
+		h += 2 // filter input row + separator line
 	}
 
 	if p.Centered {
@@ -173,7 +173,7 @@ func (p *PopupMenu) Display() {
 	x, y, w, h := p.layout()
 	visible := h - 2
 	if p.Filterable {
-		visible-- // one row used by the filter input
+		visible -= 2 // filter input row + separator line
 	}
 
 	// Styles
@@ -184,18 +184,20 @@ func (p *PopupMenu) Display() {
 		popupStyle = style.Reverse(true)
 	}
 
+	// Items use the editor's default style (dark bg, light text) so the popup
+	// blends with the editor rather than floating on a harsh white background.
 	itemStyle := config.DefStyle
 	if style, ok := config.Colorscheme["completion.item"]; ok {
 		itemStyle = style
-	} else if style, ok := config.Colorscheme["statusline"]; ok {
-		itemStyle = style
 	}
 
+	// Selected item uses the statusline colors (un-reversed: typically light bg,
+	// dark text) to create strong contrast against the dark item background.
 	selectedStyle := config.DefStyle.Reverse(true)
 	if style, ok := config.Colorscheme["completion.selected"]; ok {
 		selectedStyle = style
-	} else if style, ok := config.Colorscheme["statusline.suggestions"]; ok {
-		selectedStyle = style.Reverse(true)
+	} else if style, ok := config.Colorscheme["statusline"]; ok {
+		selectedStyle = style
 	}
 
 	set := func(px, py int, r rune, style tcell.Style) {
@@ -222,11 +224,11 @@ func (p *PopupMenu) Display() {
 	}
 	set(x+w-1, y, '┐', popupStyle)
 
-	// Filter input row (only when Filterable)
+	// Filter input row + separator (only when Filterable)
 	itemRowStart := y + 1
 	if p.Filterable {
 		py := y + 1
-		itemRowStart = y + 2
+		itemRowStart = y + 3 // past filter row and separator
 		set(x, py, '│', popupStyle)
 		// Draw "> filter_text"
 		set(x+1, py, '>', itemStyle)
@@ -251,6 +253,14 @@ func (p *PopupMenu) Display() {
 			cursorCol = innerW - 1
 		}
 		screen.ShowCursor(x+cursorCol, py)
+
+		// Separator between filter input and item list
+		sepY := y + 2
+		set(x, sepY, '├', popupStyle)
+		for i := 1; i < w-1; i++ {
+			set(x+i, sepY, '─', popupStyle)
+		}
+		set(x+w-1, sepY, '┤', popupStyle)
 	}
 
 	// Item rows
@@ -287,8 +297,6 @@ func (p *PopupMenu) Display() {
 			set(lastCol, py, '▲', popupStyle)
 		} else if row == visible-1 && hasBelow {
 			set(lastCol, py, '▼', popupStyle)
-		} else if isSelected {
-			set(lastCol, py, '▶', style)
 		} else {
 			set(lastCol, py, ' ', style)
 		}
